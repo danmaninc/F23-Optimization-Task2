@@ -63,6 +63,7 @@ void impossible_case(std::string& msg) {
     Matrix b(number_of_equations, 1);
     // Input stage of coefficients for constraints
     std::cout << "Enter coefficients (0 if absent) for all constraints (left hand side)\n";
+    int slack_vars = 0;
     for (int i = 0; i < number_of_equations; ++i) {
         std::cout << i + 1 << " constraint\n";
 
@@ -77,11 +78,11 @@ void impossible_case(std::string& msg) {
 
         // Add slack variable to A
         if (sign == ">=") {
-            a.table[i][number_of_vars] = 1;
-            number_of_vars++;
+            a.table[i][number_of_vars + slack_vars] = -1;
+            slack_vars++;
         } else if (sign == "<=") {
-            a.table[i][number_of_vars] = -1;
-            number_of_vars++;
+            a.table[i][number_of_vars + slack_vars] = 1;
+            slack_vars++;
         }
 
 
@@ -135,6 +136,9 @@ void impossible_case(std::string& msg) {
     std::cout << b << std::endl;
     std::cout << number_of_vars << std::endl;
     std::cout << number_of_equations << std::endl;
+
+    Interior ans(2, eps);
+    return ans;
 }
 
 
