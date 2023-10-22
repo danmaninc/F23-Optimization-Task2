@@ -1,3 +1,0 @@
-C:/Projects/C/C++/Optimization/F23-Optimization-Task2/cmake-build-debug/CMakeFiles/F23_Optimization_Task2.dir
-C:/Projects/C/C++/Optimization/F23-Optimization-Task2/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Projects/C/C++/Optimization/F23-Optimization-Task2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
