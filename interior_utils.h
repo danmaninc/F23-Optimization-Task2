@@ -4,6 +4,7 @@
 //TODO: write all functions
 
 #include <iostream>
+#include <optional>
 
 #include "Matrix.h"
 #include "Interior.h"

@@ -69,6 +69,30 @@ public:
     }
 };
 
+class EliminationMatrix : public IdentityMatrix {
+public:
+    explicit EliminationMatrix(int n) : IdentityMatrix(n) {}
+
+    void eliminate(Matrix& A, int row, int column, int pivot) {
+        double coefficient = (-1) * A.table[row][column] / A.table[pivot][column];
+        this->table[row][column] = coefficient;
+    }
+};
+
+class PermutationMatrix : public IdentityMatrix {
+public:
+    explicit PermutationMatrix(int n) : IdentityMatrix(n) {}
+
+    void permutate(int first, int second) {
+        for (int i = 0; i < n; ++i) {
+            double temp = this->table[first][i];
+            this->table[first][i] = this->table[second][i];
+            this->table[second][i] = temp;
+        }
+    }
+};
+
+
 void reduceMatrixToDiag(Matrix& A) {
     int last = A.n - 1;
     int pivot = last;
