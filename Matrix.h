@@ -12,65 +12,143 @@ const double ZERO = 0;
 
 const int NUMBERS_AFTER_DOT = 2;
 
-struct Matrix {
-    std::size_t n;
-    std::size_t m;
-    std::vector<std::vector<double>> table;
+class Matrix {
+public:
+    int n;
+    int m;
+    vector<vector<double>> table;
 
-    std::vector<std::string> list_of_all_vars;
-    std::vector<std::string> list_of_basic_vars;
-
-    Matrix(const std::size_t n, const std::size_t m) {
-        this->n = n;
-        this->m = m;
+    Matrix(int first, int second) {
+        n = first;
+        m = second;
 
         table.resize(n);
-
-        for (auto& r : table)
-            r.resize(m, 0);
+        for (int i = 0; i < n; ++i) {
+            table[i].resize(m);
+        }
     }
-
-    friend std::istream& operator>>(std::istream& in, Matrix& matrix) {
-        for (auto& r : matrix.table)
-            for (auto& e : r)
-                in >> e;
-
+    friend istream& operator>>(istream &in, Matrix &matrix) {
+        for (int i = 0; i < matrix.n; ++i) {
+            for (int j = 0; j < matrix.m; ++j) {
+                in >> matrix.table[i][j];
+            }
+        }
         return in;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const Matrix& matrix) {
-        out << matrix.list_of_all_vars[0] << " " << "\t";
-
-        for (int i = 1; i < matrix.list_of_all_vars.size(); i++)
-            out << matrix.list_of_all_vars.at(i) << " " << "\t";
-
-        out << std::endl;
-        int counter = 0;
-
+    friend ostream& operator<<(ostream &out, Matrix &matrix) {
         for (auto& i : matrix.table) {
-            out << matrix.list_of_basic_vars[counter++] << "\t";
-
-            for (double j : i)
-                out << std::setprecision(NUMBERS_AFTER_DOT)
-                    << std::fixed
-                    << (std::abs(j) < MIN_COUT ? ZERO : j)
-                    << "\t";
-
-            out << std::endl << std::endl;
+            for (int j = 0; j < i.size(); ++j) {
+                if (abs(i[j]) < MIN_COUT) {
+                    out << setprecision(NUMBERS_AFTER_DOT) << fixed << ZERO;
+                } else {
+                    out << setprecision(NUMBERS_AFTER_DOT) << fixed << i[j];
+                }
+                if (j != i.size() - 1) {
+                    out << " ";
+                }
+            }
+            out << endl;
         }
-
         return out;
     }
 
-    Matrix& operator= (const Matrix& matrix) {
-        for (int i = 0; i < n; ++i)
-            for (int j = 0; j < m; ++j)
-                table[i][j] = matrix.table[i][j];
+    bool checkSumSub(Matrix& A, Matrix& B) {
+        return A.n == B.n && A.m == B.m;
+    }
 
+    bool checkMul(Matrix& A, Matrix& B) {
+        return A.m == B.n;
+    }
+
+    bool checkForDeterminant(Matrix& A) {
+        return A.n == A.m;
+    }
+    double findDeterminant(Matrix& A) {
+        if (A.n == 1) {
+            return A.table[0][0];
+        }
+        if (A.n == 2) {
+            return A.table[0][0] * A.table[1][1] - A.table[0][1] * A.table[1][0];
+        }
+        bool sign = true;
+        double result = 0;
+
+        for (int column = 0; column < A.n; ++column) {
+            Matrix matrix(A.n-1, A.n-1);
+            for (int i = 1; i < A.n; ++i) {
+                int secondPosition = 0;
+                for (int j = 0; j < A.n; ++j) {
+                    if (j != column) {
+                        matrix.table[i - 1][secondPosition] = A.table[i][j];
+                        secondPosition++;
+                    }
+                }
+            }
+            if (sign) {
+                result += A.table[0][column] * findDeterminant(matrix);
+                sign = false;
+            } else {
+                result -= A.table[0][column] * findDeterminant(matrix);
+                sign = true;
+            }
+
+        }
+        return result;
+    }
+
+    Matrix& operator= (Matrix const& matrix) {
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < m; ++j) {
+                this->table[i][j] = matrix.table[i][j];
+            }
+        }
         return *this;
     }
-};
+    friend Matrix operator+ (Matrix& first, Matrix& second) {
+        Matrix res(first.n, first.m);
+        for (int i = 0; i < first.n; ++i) {
+            for (int j = 0; j < first.m; ++j) {
+                res.table[i][j] = first.table[i][j] + second.table[i][j];
+            }
+        }
+        return res;
+    }
+    friend Matrix operator- (Matrix& first, Matrix& second) {
+        Matrix res(first.n, first.m);
+        for (int i = 0; i < first.n; ++i) {
+            for (int j = 0; j < first.m; ++j) {
+                res.table[i][j] = first.table[i][j] - second.table[i][j];
+            }
+        }
+        return res;
+    }
 
+    friend Matrix operator* (Matrix& first, Matrix& second) {
+        Matrix res(first.n, second.m);
+
+        for (int i = 0; i < res.n; ++i) {
+            for (int j = 0; j < res.m; ++j) {
+                res.table[i][j] = 0;
+                for (int k = 0; k < first.m; ++k) {
+                    res.table[i][j] += first.table[i][k] * second.table[k][j];
+                }
+            }
+        }
+        return res;
+    }
+
+    Matrix findTransposeMatrix() {
+        Matrix transposed(m, n);
+
+        for (int i = 0; i < transposed.n; ++i) {
+            for (int j = 0; j < transposed.m; ++j) {
+                transposed.table[i][j] = this->table[j][i];
+            }
+        }
+        return transposed;
+    }
+};
 
 class SquareMatrix : public Matrix {
 public:
