@@ -1,6 +1,9 @@
 #ifndef F23_OPTIMIZATION_TASK2_INVERSE_UTILS_H
 #define F23_OPTIMIZATION_TASK2_INVERSE_UTILS_H
 
+#include <iomanip>
+#include <cmath>
+
 #include "Matrix.h"
 
 class AugmentedMatrix : public Matrix {
