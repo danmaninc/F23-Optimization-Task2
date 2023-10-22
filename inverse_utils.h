@@ -47,25 +47,25 @@ public:
         }
         return res;
     }
-    friend ostream& operator<<(ostream &out, AugmentedMatrix &matrix) {
+    friend std::ostream& operator<<(std::ostream &out, AugmentedMatrix &matrix) {
         for (auto& i : matrix.table) {
             for (int j = 0; j < i.size() - 1; ++j) {
                 if (abs(i[j]) < MIN_COUT) {
-                    out << setprecision(NUMBERS_AFTER_DOT) << fixed << ZERO;
+                    out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << ZERO;
                 } else {
-                    out << setprecision(NUMBERS_AFTER_DOT) << fixed << i[j];
+                    out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << i[j];
                 }
                 if (j != i.size() - 1) {
                     out << " ";
                 }
             }
-            out << endl;
+            out << std::endl;
         }
         for (int i = 0; i < matrix.n; ++i) {
             if (abs(matrix.table[i][matrix.n]) < MIN_COUT) {
-                out << setprecision(NUMBERS_AFTER_DOT) << fixed << ZERO << endl;
+                out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << ZERO << std::endl;
             } else {
-                out << setprecision(NUMBERS_AFTER_DOT) << fixed << matrix.table[i][matrix.n] << endl;
+                out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << matrix.table[i][matrix.n] << std::endl;
             }
         }
         return out;
@@ -161,9 +161,9 @@ void normalize(Matrix& A) {
 
 SquareMatrix findInverseByGauss(SquareMatrix A) {
     AugmentedMatrix aug(A);
-    reduceMatrixToUpp(aug);
-    reduceMatrixToDiag(aug);
-    normalize(aug);
+    reduceMatrixToUpp(*(Matrix *) &aug);
+    reduceMatrixToDiag(*(Matrix *) &aug);
+    normalize(*(Matrix *) &aug);
     return aug.getResult();
 }
 
