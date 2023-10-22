@@ -5,9 +5,15 @@
 
 #include <iostream>
 #include <optional>
+#include <random>
 
 #include "Matrix.h"
 #include "Interior.h"
+#include "inverse_utils.h"
+
+int slack_vars = 0;
+int number_of_vars = 0;
+int number_of_equations = 0;
 
 // Multiply all elements of vector by -1
 void swap_to_max_problem(Matrix c) {
@@ -21,15 +27,13 @@ void impossible_case(std::string& msg) {
     std::cout << msg << std::endl;
 }
 
-[[nodiscard]] std::optional<std::tuple<Matrix, Matrix, Matrix, int, int, bool, int>> read_IP() {
+[[nodiscard]] std::optional<std::tuple<ColumnVector, Matrix, ColumnVector, bool, int>> read_IP() {
     // Get the number from variables
     std::cout << "How many variables are in the task?\n";
-    int number_of_vars;
     std::cin >> number_of_vars;
 
     // Get the number of constraints
     std::cout << "How many constraints are in the task (excluding x >= 0)?\n";
-    int number_of_equations;
     std::cin >> number_of_equations;
 
     // Determine the type of optimization problem
@@ -46,7 +50,7 @@ void impossible_case(std::string& msg) {
 
     // Enter stage of coefficients for z-function
     std::cout << "Enter coefficients c(i-th) in z function (0 if absent)\n";
-    Matrix c(number_of_vars + number_of_equations, 1);
+    ColumnVector c(number_of_vars + number_of_equations);
     for (int i = 0; i < number_of_vars; ++i) {
         std::cout << "c" << i + 1 << "=";
         std::cin >> c.table[i][0];
@@ -60,10 +64,9 @@ void impossible_case(std::string& msg) {
     // Matrix A: each row determines coefficients for each equation
     Matrix a(number_of_equations, number_of_vars+number_of_equations);
 
-    Matrix b(number_of_equations, 1);
+    ColumnVector b(number_of_equations);
     // Input stage of coefficients for constraints
     std::cout << "Enter coefficients (0 if absent) for all constraints (left hand side)\n";
-    int slack_vars = 0;
     for (int i = 0; i < number_of_equations; ++i) {
         std::cout << i + 1 << " constraint\n";
 
@@ -119,64 +122,142 @@ void impossible_case(std::string& msg) {
                     c,
                     a,
                     b,
-                    number_of_vars,
-                    number_of_equations,
                     is_max_problem, eps
             )
     );
 }
 
-[[nodiscard]] std::optional<Interior> perform_interior_method() {
-    auto matrix_opt = read_IP();
-
-    auto [c, a, b, number_of_vars, number_of_equations, is_max_problem, eps] = matrix_opt.value();
-
-    std::cout << c << std::endl;
-    std::cout << a << std::endl;
-    std::cout << b << std::endl;
-    std::cout << number_of_vars << std::endl;
-    std::cout << number_of_equations << std::endl;
-
-    Interior ans(2, eps);
-    return ans;
-}
-
-
-bool is_feasible(std::vector<double> x) {
-    for (int i = 0; i < x.size(); i++) {
-        if (x[i] <= 0) {
+bool is_feasible(ColumnVector& x) {
+    for (int i = 0; i < x.n; i++) {
+        if (x.table[i][0] <= 0) {
             return false;
         }
     }
     return true;
 }
 
-std::vector<double> set_initial_solution(
-        std::vector<double> c,
+ColumnVector set_initial_solution(
+        ColumnVector c,
         Matrix &A,
-        std::vector<double> b) {
-    std::vector<double> x;
-    for (int i = 0; i < c.size(); i++) {
-        if (c[i] != 0) {
-            x.push_back(rand());
-        } else x.push_back(0);
+        ColumnVector b) {
+    ColumnVector x(number_of_vars + slack_vars);
+
+    double maxB = 0;
+    for (int i = 0; i < b.n; ++i) {
+        if (maxB < b.table[i][0]) maxB = b.table[i][0];
     }
-
-    int k = 0;
-
+    std::cout << maxB << std::endl;
     while (!is_feasible(x)) {
-        for (int i = 0; i < c.size(); i++) {
-            if (x[i] == 0) {
-                int sum = 0;
-                for (int j = 0; j < A.n; j++) {
-                    sum += A.table[i][j];
-                }
-                x[i] = c[k++] - sum;
+        std::random_device rd;
+        std::uniform_real_distribution<double> dist(0, maxB);
+        for (int i = 0; i < c.n; i++)
+        {
+            if (c.table[i][0] != 0) x.table[i][0] = dist(rd);
+            else x.table[i][0] = 0;
+        }
+
+        for (int i = 0; i < A.n; ++i) {
+            double tempSum = 0;
+            for (int j = 0; j < number_of_vars; j++) {
+                tempSum += A.table[i][j] * x.table[j][0];
             }
+            x.table[i + number_of_vars][0] = (b.table[i][0] - tempSum) * A.table[i][i+number_of_vars];
         }
     }
     return x;
 }
 
+auto calculateX_tilda(double alpha, Matrix& c_p)
+{
+    Matrix ones(number_of_vars + slack_vars, 1);
+    for (int i = 0; i < ones.n; i++)
+    {
+        ones.table[i][0] = 1;
+    }
+
+    double v = 0;
+    for (int i = 0; i < c_p.n; i++)
+    {
+        if (c_p.table[i][0] >= 0) continue;
+
+        v = std::max(fabs(c_p.table[i][0]), v);
+    }
+
+
+    Matrix x_tilda = (alpha/v) * c_p;
+    x_tilda = ones + x_tilda;
+
+    return x_tilda;
+}
+
+[[nodiscard]] std::optional<Interior> perform_interior_method() {
+    auto matrix_opt = read_IP();
+
+    auto [c, A, b, is_max_problem, eps] = matrix_opt.value();
+
+    std::cout << c << std::endl;
+    std::cout << A << std::endl;
+    std::cout << b << std::endl;
+    std::cout << number_of_vars << std::endl;
+    std::cout << number_of_equations << std::endl;
+
+    IdentityMatrix I(number_of_vars + slack_vars);
+
+    auto init = set_initial_solution(c, A, b);
+
+    Matrix D = I;
+    for (int i = 0; i < init.n; i++)
+    {
+        D.table[i][i] = init.table[i][0];
+    }
+
+    std::cout << D << std::endl;
+
+    //Matrix* x;
+    Matrix x(D.n, 1);
+    Matrix x_tilda(D.n, 1);
+    while (true)
+    {
+        Matrix A_tilda = A * D;
+        Matrix c_tilda = D * c;
+        Matrix A_tilda_t = A_tilda.findTransposeMatrix();
+
+        Matrix arg = A_tilda * A_tilda_t;
+        Matrix gauss = findInverseByGauss(*(SquareMatrix*)&arg);
+
+        Matrix P = A_tilda_t * gauss;
+        P = P * A_tilda;
+        P = I - P;
+
+        Matrix c_p = P * c_tilda;
+
+        // alpha = 0.5
+        x_tilda = calculateX_tilda(0.5, c_p);
+
+        Matrix x_new = D * x_tilda;
+        std::cout << "Decision bebra:\n" << x_tilda << std::endl;
+
+        std::cout << "max/min val:\n" << x_new << std::endl;
+
+        if (x == x_new) break;
+
+        x = x_new;
+        D = I;
+        for (int i = 0; i < x.n; i++)
+        {
+            D.table[i][i] = x.table[i][0];
+        }
+    }
+
+    std::cout << "Bebraversity 0.5" << std::endl;
+
+    std::cout << "Decision variables:\n" << x_tilda << std::endl;
+
+    // TODO: min/max
+    std::cout << "max/min val:\n" << x << std::endl;
+
+    Interior ans(2, eps);
+    return ans;
+}
 
 #endif //F23_OPTIMIZATION_TASK2_INTERIOR_UTILS_H

@@ -5,12 +5,15 @@
 #include <string>
 #include <istream>
 #include <iomanip>
+#include <cmath>
 
 const double MIN_COUT = 0.05;
 
 const double ZERO = 0;
 
 const int NUMBERS_AFTER_DOT = 2;
+
+const double EPS = 0.001;
 
 class Matrix {
 public:
@@ -27,6 +30,8 @@ public:
             table[i].resize(m);
         }
     }
+
+
     friend std::istream& operator>>(std::istream &in, Matrix &matrix) {
         for (int i = 0; i < matrix.n; ++i) {
             for (int j = 0; j < matrix.m; ++j) {
@@ -39,7 +44,7 @@ public:
     friend std::ostream& operator<<(std::ostream &out, Matrix &matrix) {
         for (auto& i : matrix.table) {
             for (int j = 0; j < i.size(); ++j) {
-                if (abs(i[j]) < MIN_COUT) {
+                if (fabs(i[j]) < MIN_COUT) {
                     out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << ZERO;
                 } else {
                     out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << i[j];
@@ -124,6 +129,17 @@ public:
         return res;
     }
 
+    friend Matrix operator* (double number, Matrix& matrix) {
+        Matrix res(matrix.n, matrix.m);
+
+        for (int i = 0; i < res.n; ++i) {
+            for (int j = 0; j < res.m; ++j) {
+                res.table[i][j] = number * matrix.table[i][j];
+            }
+        }
+        return res;
+    }
+
     friend Matrix operator* (Matrix& first, Matrix& second) {
         Matrix res(first.n, second.m);
 
@@ -145,9 +161,7 @@ public:
 
         for (int i = 0; i < first.n; ++i) {
             for (int j = 0; j < first.m; ++j) {
-                if (first.table[i][j] != second.table[i][j]) {
-                   return false;
-                }
+                if (fabs(first.table[i][j] - second.table[i][j]) > EPS) return false;
             }
         }
         return true;
@@ -283,6 +297,21 @@ public:
         auto res = *ptrA * *ptrB;
         return * (ColumnVector *) &res;
     }
+
+    friend Matrix operator* (IdentityMatrix& a, ColumnVector& b) {
+        auto* ptrA = (Matrix *) &a;
+        auto* ptrB = (Matrix *) &b;
+        auto res = *ptrA * *ptrB;
+        return * (Matrix *) &res;
+    }
+
+    friend Matrix operator* (Matrix& a, ColumnVector& b) {
+        auto* ptrA = &a;
+        auto* ptrB = (Matrix *) &b;
+        auto res = *ptrA * *ptrB;
+        return * (Matrix *) &res;
+    }
+
     friend std::istream& operator>>(std::istream &in, ColumnVector &matrix) {
         auto* ptr = (Matrix *) &matrix;
         in >> *ptr;
