@@ -6,9 +6,8 @@
 #include <iostream>
 
 #include "Matrix.h"
-#include "interior_utils.h"
 
-class Interior {
+struct Interior {
 
 };
 
