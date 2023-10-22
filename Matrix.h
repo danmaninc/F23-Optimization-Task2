@@ -16,7 +16,7 @@ class Matrix {
 public:
     int n;
     int m;
-    vector<vector<double>> table;
+    std::vector<std::vector<double>> table;
 
     Matrix(int first, int second) {
         n = first;
@@ -27,7 +27,7 @@ public:
             table[i].resize(m);
         }
     }
-    friend istream& operator>>(istream &in, Matrix &matrix) {
+    friend std::istream& operator>>(std::istream &in, Matrix &matrix) {
         for (int i = 0; i < matrix.n; ++i) {
             for (int j = 0; j < matrix.m; ++j) {
                 in >> matrix.table[i][j];
@@ -36,19 +36,19 @@ public:
         return in;
     }
 
-    friend ostream& operator<<(ostream &out, Matrix &matrix) {
+    friend std::ostream& operator<<(std::ostream &out, Matrix &matrix) {
         for (auto& i : matrix.table) {
             for (int j = 0; j < i.size(); ++j) {
                 if (abs(i[j]) < MIN_COUT) {
-                    out << setprecision(NUMBERS_AFTER_DOT) << fixed << ZERO;
+                    out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << ZERO;
                 } else {
-                    out << setprecision(NUMBERS_AFTER_DOT) << fixed << i[j];
+                    out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << i[j];
                 }
                 if (j != i.size() - 1) {
                     out << " ";
                 }
             }
-            out << endl;
+            out << std::endl;
         }
         return out;
     }
@@ -176,18 +176,18 @@ public:
         auto res = ptr->findTransposeMatrix();
         return * (SquareMatrix *) &res;
     }
-    friend istream& operator>>(istream &in, SquareMatrix &matrix) {
+    friend std::istream& operator>>(std::istream &in, SquareMatrix &matrix) {
         auto* ptr = (Matrix *) &matrix;
         in >> *ptr;
         return in;
     }
-    friend ostream& operator<<(ostream &out, SquareMatrix &matrix) {
+    friend std::ostream& operator<<(std::ostream &out, SquareMatrix &matrix) {
         auto* ptr = (Matrix *) &matrix;
         out << *ptr;
         return out;
     }
     void resize(int newSize) {
-        vector<double> a;
+        std::vector<double> a;
         for (int i = 0; i < newSize; ++i) {
             a.push_back(0);
         }
@@ -218,7 +218,7 @@ public:
             }
         }
     }
-    friend ostream& operator<<(ostream &out, IdentityMatrix &matrix) {
+    friend std::ostream& operator<<(std::ostream &out, IdentityMatrix &matrix) {
         auto* ptr = (Matrix *) &matrix;
         out << *ptr;
         return out;
@@ -264,18 +264,18 @@ public:
         auto res = *ptrA * *ptrB;
         return * (ColumnVector *) &res;
     }
-    friend istream& operator>>(istream &in, ColumnVector &matrix) {
+    friend std::istream& operator>>(std::istream &in, ColumnVector &matrix) {
         auto* ptr = (Matrix *) &matrix;
         in >> *ptr;
         return in;
     }
-    friend ostream& operator<<(ostream &out, ColumnVector &matrix) {
+    friend std::ostream& operator<<(std::ostream &out, ColumnVector &matrix) {
         auto* ptr = (Matrix *) &matrix;
         out << *ptr;
         return out;
     }
     void resize(int newSize) {
-        vector<double> a;
+        std::vector<double> a;
         a.push_back(0);
         for (int i = n; i < newSize; ++i) {
             table.push_back(a);
