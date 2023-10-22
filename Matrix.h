@@ -138,6 +138,25 @@ public:
         return res;
     }
 
+    friend bool operator== (Matrix& first, Matrix& second) {
+        if (first.n != second.n || first.m != second.m) {
+            return false;
+        }
+
+        for (int i = 0; i < first.n; ++i) {
+            for (int j = 0; j < first.m; ++j) {
+                if (first.table[i][j] != second.table[i][j]) {
+                   return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    friend bool operator!= (Matrix& first, Matrix& second) {
+        return !(first == second);
+    }
+
     Matrix findTransposeMatrix() {
         Matrix transposed(m, n);
 
