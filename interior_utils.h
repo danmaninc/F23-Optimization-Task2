@@ -86,6 +86,8 @@ void impossible_case(std::string& msg) {
         } else if (sign == "<=") {
             a.table[i][number_of_vars + slack_vars] = 1;
             slack_vars++;
+        } else if (sign == "=") {
+
         }
 
 
@@ -190,34 +192,13 @@ auto calculateX_tilda(double alpha, Matrix& c_p)
     return x_tilda;
 }
 
-[[nodiscard]] std::optional<Interior> perform_interior_method() {
-    auto matrix_opt = read_IP();
-
-    auto [c, A, b, is_max_problem, eps] = matrix_opt.value();
-
-    std::cout << c << std::endl;
-    std::cout << A << std::endl;
-    std::cout << b << std::endl;
-    std::cout << number_of_vars << std::endl;
-    std::cout << number_of_equations << std::endl;
-
+Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
     IdentityMatrix I(number_of_vars + slack_vars);
 
-    auto init = set_initial_solution(c, A, b);
-
-    Matrix D = I;
-    for (int i = 0; i < init.n; i++)
-    {
-        D.table[i][i] = init.table[i][0];
-    }
-
-    std::cout << D << std::endl;
-
-    //Matrix* x;
     Matrix x(D.n, 1);
     Matrix x_tilda(D.n, 1);
-    while (true)
-    {
+
+    while (true) {
         Matrix A_tilda = A * D;
         Matrix c_tilda = D * c;
         Matrix A_tilda_t = A_tilda.findTransposeMatrix();
@@ -235,9 +216,6 @@ auto calculateX_tilda(double alpha, Matrix& c_p)
         x_tilda = calculateX_tilda(0.5, c_p);
 
         Matrix x_new = D * x_tilda;
-        std::cout << "Decision bebra:\n" << x_tilda << std::endl;
-
-        std::cout << "max/min val:\n" << x_new << std::endl;
 
         if (x == x_new) break;
 
@@ -249,14 +227,50 @@ auto calculateX_tilda(double alpha, Matrix& c_p)
         }
     }
 
-    std::cout << "Bebraversity 0.5" << std::endl;
+    std::cout << "max/min solution:\n" << x << std::endl;
 
-    std::cout << "Decision variables:\n" << x_tilda << std::endl;
+    return x;
+}
 
-    // TODO: min/max
-    std::cout << "max/min val:\n" << x << std::endl;
+[[nodiscard]] std::optional<Interior> perform_interior_method() {
+    auto matrix_opt = read_IP();
+
+    auto [c, A, b, is_max_problem, eps] = matrix_opt.value();
+
+    std::cout << c << std::endl;
+    std::cout << A << std::endl;
+    std::cout << b << std::endl;
+    std::cout << "Vars: " << number_of_vars << std::endl;
+    std::cout << "Slack: " << slack_vars << std::endl;
+    std::cout << number_of_equations << std::endl;
+
+    IdentityMatrix I(number_of_vars + slack_vars);
+
+    auto init = set_initial_solution(c, A, b);
+
+    Matrix D = I;
+    for (int i = 0; i < init.n; i++)
+    {
+        D.table[i][i] = init.table[i][0];
+    }
+
+    std::cout << D << std::endl;
+
+    std::cout << "Alpha is 0.5\n";
+    Matrix x1 = interior_main(0.5, A, D, c);
+
+    std::cout << "Alpha is 0.9\n";
+    Matrix x2 = interior_main(0.9, A, D, c);
 
     Interior ans(2, eps);
+
+    double result = 0;
+    for (int i = 0; i < x1.n; ++i) {
+        result += x1.table[i][0] * c.table[i][0];
+        ans.variables[i] = x1.table[i][0];
+    }
+
+    ans.z = result;
     return ans;
 }
 
