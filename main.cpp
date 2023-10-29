@@ -9,6 +9,7 @@ int main(int argc, char** argv) {
 
     if (answer.has_value())
         std::cout << answer.value();
-
+    else
+        std::cout << "No solution" << std::endl;
     return 0;
 }

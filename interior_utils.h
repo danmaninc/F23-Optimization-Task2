@@ -16,13 +16,18 @@ int number_of_vars = 0;
 int number_of_equations = 0;
 
 // Multiply all elements of vector by -1
-void swap_to_max_problem(Matrix c) {
+void swap_to_max_problem(Matrix& c) {
     for (auto& i : c.table)
         i[0] = -1 * i[0];
 }
 
 // Output error if the method is not applicable
 void impossible_case(std::string& msg) {
+    std::cout << "The method is not applicable!\n";
+    std::cout << msg << std::endl;
+}
+
+void impossible_case(std::string&& msg) {
     std::cout << "The method is not applicable!\n";
     std::cout << msg << std::endl;
 }
@@ -43,8 +48,7 @@ void impossible_case(std::string& msg) {
 
     // If the optimization problem is not max or min, then output error
     if (problem != "max" && problem != "min") {
-        std::string msg = "Only 'max' and 'min'!";
-        impossible_case(msg);
+        impossible_case(std::string("Only 'max' and 'min'!"));
         return std::nullopt;
     }
 
@@ -56,9 +60,9 @@ void impossible_case(std::string& msg) {
         std::cin >> c.table[i][0];
     }
 
-    const bool is_max_problem = problem == "max";
+    const bool is_min_problem = problem == "min";
     // Multiply all coefficients by -1 if it is max problem
-    if (is_max_problem)
+    if (is_min_problem)
         swap_to_max_problem(c);
 
     // Matrix A: each row determines coefficients for each equation
@@ -96,14 +100,16 @@ void impossible_case(std::string& msg) {
         double RHS;
         std::cin >> RHS;
 
-        if (RHS < 0) {
-            std::string msg = std::to_string(RHS) + " is less than zero";
+        /*if (RHS <= 0) {
+            std::string msg = std::to_string(RHS) + " is less than zero or equal to zero";
             impossible_case(msg);
             return std::nullopt;
-        }
+        }*/
 
         b.table[i][0] = RHS;
     }
+    c.resize(number_of_vars+slack_vars);
+    a.resize(number_of_equations, number_of_vars+slack_vars);
 
     std::cout << "Enter approximation accuracy (the number of values after the floating point, e.g., 2)\n";
 
@@ -111,7 +117,7 @@ void impossible_case(std::string& msg) {
     std::cin >> eps;
 
     if (eps < 0) {
-        impossible_case((std::string &) "Approximation accuracy is less than zero");
+        impossible_case(std::string("Approximation accuracy is less than zero"));
         return std::nullopt;
     }
 
@@ -124,21 +130,24 @@ void impossible_case(std::string& msg) {
                     c,
                     a,
                     b,
-                    is_max_problem, eps
+                    is_min_problem, eps
             )
     );
 }
 
 bool is_feasible(ColumnVector& x) {
     for (int i = 0; i < x.n; i++) {
-        if (x.table[i][0] <= 0) {
+        if (x.table[i][0] < 0) { // <=
             return false;
         }
+    }
+    for (int i = 0; i < number_of_vars; i++) {
+        if (x.table[i][0] == 0) return false;
     }
     return true;
 }
 
-ColumnVector set_initial_solution(
+std::optional<ColumnVector> set_initial_solution(
         ColumnVector c,
         Matrix &A,
         ColumnVector b) {
@@ -148,8 +157,12 @@ ColumnVector set_initial_solution(
     for (int i = 0; i < b.n; ++i) {
         if (maxB < b.table[i][0]) maxB = b.table[i][0];
     }
-    std::cout << maxB << std::endl;
+    int counter = 0;
     while (!is_feasible(x)) {
+        if (counter == 200)
+        {
+            return std::nullopt;
+        }
         std::random_device rd;
         std::uniform_real_distribution<double> dist(0, maxB);
         for (int i = 0; i < c.n; i++)
@@ -158,13 +171,15 @@ ColumnVector set_initial_solution(
             else x.table[i][0] = 0;
         }
 
-        for (int i = 0; i < A.n; ++i) {
+        int number_of_equalities = number_of_equations - slack_vars;
+        for (int i = 0; i < number_of_equations; ++i) {
             double tempSum = 0;
             for (int j = 0; j < number_of_vars; j++) {
                 tempSum += A.table[i][j] * x.table[j][0];
             }
-            x.table[i + number_of_vars][0] = (b.table[i][0] - tempSum) * A.table[i][i+number_of_vars];
+            x.table[i + number_of_vars - number_of_equalities][0] = (b.table[i][0] - tempSum) * A.table[i][i + number_of_vars - number_of_equalities];
         }
+        counter++;
     }
     return x;
 }
@@ -204,19 +219,29 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
         Matrix A_tilda_t = A_tilda.findTransposeMatrix();
 
         Matrix arg = A_tilda * A_tilda_t;
+        std::cout << "arg before\n" << arg << std::endl;
         Matrix gauss = findInverseByGauss(*(SquareMatrix*)&arg);
 
-        Matrix P = A_tilda_t * gauss;
-        P = P * A_tilda;
-        P = I - P;
+        std::cout << "A_tilda_t:\n" << A_tilda_t << std::endl;
+        std::cout << "A_tilda\n" << A_tilda << std::endl;
+        std::cout << "arg after\n" << arg << std::endl;
+        std::cout << "gauss\n" << gauss << std::endl;
 
+        Matrix P1 = A_tilda_t * gauss;
+        std::cout << "P1:\n" << P1 << std::endl;
+        Matrix P2 = P1 * A_tilda;
+        std::cout << "P2:\n" << P2 << std::endl;
+        Matrix P3 = I - P2;
+
+        Matrix P = P3;
+        std::cout << "P3:\n" << P << std::endl;
         Matrix c_p = P * c_tilda;
 
         // alpha = 0.5
         x_tilda = calculateX_tilda(0.5, c_p);
 
         Matrix x_new = D * x_tilda;
-
+        std::cout << "x_new\n" << x_new << std::endl;
         if (x == x_new) break;
 
         x = x_new;
@@ -234,8 +259,10 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
 
 [[nodiscard]] std::optional<Interior> perform_interior_method() {
     auto matrix_opt = read_IP();
-
-    auto [c, A, b, is_max_problem, eps] = matrix_opt.value();
+    if (!matrix_opt.has_value()) {
+        return std::nullopt;
+    }
+    auto [c, A, b, is_min_problem, eps] = matrix_opt.value();
 
     std::cout << c << std::endl;
     std::cout << A << std::endl;
@@ -246,8 +273,13 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
 
     IdentityMatrix I(number_of_vars + slack_vars);
 
-    auto init = set_initial_solution(c, A, b);
-
+    auto init_res = set_initial_solution(c, A, b);
+    if (!init_res.has_value())
+    {
+        impossible_case(std::string("No solution"));
+        return std::nullopt;
+    }
+    auto init = init_res.value();
     Matrix D = I;
     for (int i = 0; i < init.n; i++)
     {
@@ -262,15 +294,20 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
     std::cout << "Alpha is 0.9\n";
     Matrix x2 = interior_main(0.9, A, D, c);
 
-    Interior ans(2, eps);
+    Interior ans(number_of_vars, eps);
 
     double result = 0;
+    bool is_zero = true;
     for (int i = 0; i < x1.n; ++i) {
         result += x1.table[i][0] * c.table[i][0];
         ans.variables[i] = x1.table[i][0];
+        if (ans.variables[i] != 0) is_zero = false;
     }
 
     ans.z = result;
+    if (is_min_problem) ans.z *= -1;
+
+    if (is_zero) return std::nullopt;
     return ans;
 }
 

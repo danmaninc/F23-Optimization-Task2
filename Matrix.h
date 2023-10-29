@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <cmath>
 
-const double MIN_COUT = 0.05;
+const double MIN_COUT = 0.000005;
 
 const double ZERO = 0;
 
@@ -45,9 +45,9 @@ public:
         for (auto& i : matrix.table) {
             for (int j = 0; j < i.size(); ++j) {
                 if (fabs(i[j]) < MIN_COUT) {
-                    out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << ZERO;
+                    out << /*std::setprecision(NUMBERS_AFTER_DOT) << std::fixed <<*/ ZERO;
                 } else {
-                    out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << i[j];
+                    out << /*std::setprecision(NUMBERS_AFTER_DOT) << std::fixed <<*/ i[j];
                 }
                 if (j != i.size() - 1) {
                     out << " ";
@@ -56,6 +56,16 @@ public:
             out << std::endl;
         }
         return out;
+    }
+
+    void resize(int newN, int newM)
+    {
+        n = newN;
+        m = newM;
+        table.resize(newN);
+        for (int i = 0; i < newN; i++) {
+            table[i].resize(newM);
+        }
     }
 
     bool checkSumSub(Matrix& A, Matrix& B) {
@@ -323,12 +333,8 @@ public:
         return out;
     }
     void resize(int newSize) {
-        std::vector<double> a;
-        a.push_back(0);
-        for (int i = n; i < newSize; ++i) {
-            table.push_back(a);
-        }
         n = newSize;
+        table.resize(newSize);
     }
 };
 

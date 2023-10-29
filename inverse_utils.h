@@ -160,6 +160,11 @@ void normalize(Matrix& A) {
 
 
 SquareMatrix findInverseByGauss(SquareMatrix A) {
+    if (A.n == 1) {
+        SquareMatrix res(1);
+        res.table[0][0] = 1 / A.table[0][0];
+        return res;
+    }
     AugmentedMatrix aug(A);
     reduceMatrixToUpp(*(Matrix *) &aug);
     reduceMatrixToDiag(*(Matrix *) &aug);
