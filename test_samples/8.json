@@ -1,0 +1,13 @@
+{
+  "number_of_vars": 2,
+  "number_of_equations": 3,
+  "problem": "max",
+  "z_row": [9.8, 7.7],
+  "matrix": [
+    [25, 15],
+    [1, 2],
+    [3, 2]
+  ],
+  "signs": ["<=", "<=", "<="],
+  "rhs": [2000, 150, 240]
+}

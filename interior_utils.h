@@ -214,7 +214,7 @@ Matrix calculateX_tilda(const double alpha, const Matrix& c_p) {
 
 /** Compute an optimal solution via Interior-point Algorithm */
 
-Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVector& c) {
+Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVector& c, const bool verbose) {
     IdentityMatrix I(number_of_vars + slack_vars);
 
     Matrix x(D.n, 1);
@@ -243,28 +243,18 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
             D.table[i][i] = x.table[i][0];
     }
 
-    std::cout << "max/min solution:\n" << x << std::endl;
+    if (verbose) std::cout << "max/min solution:\n" << x << std::endl;
     return x;
 }
 
-/** Perform Interior-point algorithm */
-
-[[nodiscard]] std::optional<Interior> perform_interior_method() {
-    // Read user input
-    auto matrix_opt = read_IP();
-
-    if (!matrix_opt.has_value())
-        return std::nullopt;
-
-    auto [c, A, b, is_min_problem, eps] = matrix_opt.value();
-
-    std::cout << "C:\n" << c << std::endl;
-    std::cout << "A:\n" << A << std::endl;
-    std::cout << "B:\n" << b << std::endl;
-    std::cout << "Vars: " << number_of_vars << std::endl;
-    std::cout << "Slack: " << slack_vars << std::endl;
-    std::cout << "Number of equations: " << number_of_equations << std::endl;
-
+[[nodiscard]] std::optional<Interior> calculate_answer(
+        ColumnVector& c,
+        Matrix& A,
+        ColumnVector& b,
+        const bool is_min_problem,
+        const int eps = 2,
+        const bool verbose = true
+) {
     IdentityMatrix I(number_of_vars + slack_vars);
 
     // Get initial trial solution
@@ -281,14 +271,12 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
     for (int i = 0; i < init.n; i++)
         D.table[i][i] = init.table[i][0];
 
-    std::cout << "D:\n" << D << std::endl;
-
     // Compute an optimal solution
-    std::cout << "Alpha is 0.5\n";
-    auto x1 = interior_main(0.5, A, D, c);
+    if (verbose) std::cout << "Alpha is 0.5\n";
+    auto x1 = interior_main(0.5, A, D, c, verbose);
 
-    std::cout << "Alpha is 0.9\n";
-    auto x2 = interior_main(0.9, A, D, c);
+    if (verbose) std::cout << "Alpha is 0.9\n";
+    auto x2 = interior_main(0.9, A, D, c, verbose);
 
     Interior ans(number_of_vars, eps);
 
@@ -306,6 +294,19 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
     if (is_min_problem) ans.z *= -1;
     if (is_zero) return std::nullopt;
     return std::make_optional(std::move(ans));
+}
+
+/** Perform Interior-point algorithm */
+
+[[nodiscard]] std::optional<Interior> perform_interior_method() {
+    // Read user input
+    auto matrix_opt = read_IP();
+
+    if (!matrix_opt.has_value())
+        return std::nullopt;
+
+    auto [c, A, b, is_min_problem, eps] = matrix_opt.value();
+    return calculate_answer(c, A, b, is_min_problem, eps);
 }
 
 #endif //F23_OPTIMIZATION_TASK2_INTERIOR_UTILS_H
