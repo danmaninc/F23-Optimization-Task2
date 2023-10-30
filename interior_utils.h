@@ -126,6 +126,7 @@ void impossible_case(std::string&& msg) {
     );
 }
 
+// Checks if the x is feasible solution
 bool is_feasible(const ColumnVector& x) {
     for (int i = 0; i < x.n; i++)
         if (x.table[i][0] < 0)
@@ -138,6 +139,7 @@ bool is_feasible(const ColumnVector& x) {
     return true;
 }
 
+// Sets initial trial solution
 std::optional<ColumnVector> set_initial_solution(
         const ColumnVector& c,
         const Matrix &A,
@@ -178,6 +180,7 @@ std::optional<ColumnVector> set_initial_solution(
     return std::make_optional(std::move(x));
 }
 
+// Calculates x_tilda for the iteration
 Matrix calculateX_tilda(double alpha, const Matrix& c_p) {
     Matrix ones(number_of_vars + slack_vars, 1);
 
@@ -196,6 +199,7 @@ Matrix calculateX_tilda(double alpha, const Matrix& c_p) {
     return x_tilda;
 }
 
+// Compute optimal solution via Interior-point Algorithm
 Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVector& c) {
     IdentityMatrix I(number_of_vars + slack_vars);
 
@@ -233,7 +237,9 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
     return x;
 }
 
+// Perform Interior-point algorithm
 [[nodiscard]] std::optional<Interior> perform_interior_method() {
+    // Read user input
     auto matrix_opt = read_IP();
 
     if (!matrix_opt.has_value())
@@ -250,8 +256,8 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
 
     IdentityMatrix I(number_of_vars + slack_vars);
 
+    // Get initial trial solution
     auto init_res = set_initial_solution(c, A, b);
-
     if (!init_res.has_value()) {
         impossible_case(std::string("No solution"));
         return std::nullopt;
@@ -260,11 +266,13 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
     auto init = init_res.value();
     Matrix D = I;
 
+    // Fill matrix D
     for (int i = 0; i < init.n; i++)
         D.table[i][i] = init.table[i][0];
 
     std::cout << "D:\n" << D << std::endl;
 
+    // Compute optimal solution
     std::cout << "Alpha is 0.5\n";
     Matrix x1 = interior_main(0.5, A, D, c);
 
