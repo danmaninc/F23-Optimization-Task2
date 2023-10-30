@@ -18,6 +18,8 @@ struct Interior {
         variables.resize(size, 0);
     }
 
+    ~Interior() = default;
+
     friend std::ostream& operator<<(std::ostream& out, Interior& answer) {
         out << "Value of z: " << answer.z << std::endl;
 

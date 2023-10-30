@@ -159,7 +159,7 @@ std::optional<ColumnVector> set_initial_solution(
     }
     int counter = 0;
     while (!is_feasible(x)) {
-        if (counter == 200)
+        if (counter == 1000000)
         {
             return std::nullopt;
         }

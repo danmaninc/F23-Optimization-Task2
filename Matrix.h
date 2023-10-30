@@ -31,6 +31,7 @@ public:
         }
     }
 
+    ~Matrix() = default;
 
     friend std::istream& operator>>(std::istream &in, Matrix &matrix) {
         for (int i = 0; i < matrix.n; ++i) {
@@ -58,8 +59,7 @@ public:
         return out;
     }
 
-    void resize(int newN, int newM)
-    {
+    void resize(int newN, int newM) {
         n = newN;
         m = newM;
         table.resize(newN);
@@ -196,6 +196,7 @@ public:
 class SquareMatrix : public Matrix {
 public:
     explicit SquareMatrix(int n) : Matrix(n, n) {};
+
     friend SquareMatrix operator+ (SquareMatrix& a, SquareMatrix& b) {
         auto* ptrA = (Matrix *) &a;
         auto* ptrB = (Matrix *) &b;
@@ -261,6 +262,9 @@ public:
             }
         }
     }
+
+    ~IdentityMatrix() = default;
+
     friend std::ostream& operator<<(std::ostream &out, IdentityMatrix &matrix) {
         auto* ptr = (Matrix *) &matrix;
         out << *ptr;
@@ -289,6 +293,9 @@ public:
 class ColumnVector : public Matrix {
 public:
     explicit ColumnVector(int first) : Matrix(first, 1) {}
+
+    ~ColumnVector() = default;
+
     friend ColumnVector operator+ (ColumnVector& a, ColumnVector& b) {
         auto* ptrA = (Matrix *) &a;
         auto* ptrB = (Matrix *) &b;
