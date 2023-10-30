@@ -154,15 +154,6 @@ std::optional<ColumnVector> set_initial_solution(
 ) {
     ColumnVector x(number_of_vars + slack_vars);
     double maxB = 0;
-<<<<<<< HEAD
-    for (int i = 0; i < b.n; ++i) {
-        if (maxB < b.table[i][0]) maxB = b.table[i][0];
-    }
-    int counter = 0;
-    while (!is_feasible(x)) {
-        if (counter == 1000000)
-        {
-=======
 
     for (int i = 0; i < b.n; ++i)
         if (maxB < b.table[i][0])
@@ -170,44 +161,27 @@ std::optional<ColumnVector> set_initial_solution(
 
     for (int counter = 0; !is_feasible(x); ++counter) {
         if (counter == 1000000)
->>>>>>> c14a27549760e1c2c7b79d0ee226bb6fc085b8e3
             return std::nullopt;
 
         std::random_device rd;
         std::uniform_real_distribution<double> dist(0, maxB);
-<<<<<<< HEAD
+
         for (int i = 0; i < c.n; i++)
         {
             if (c.table[i][0] != 0) x.table[i][0] = round(dist(rd) * 100)/100;
             else x.table[i][0] = 0;
         }
-=======
->>>>>>> c14a27549760e1c2c7b79d0ee226bb6fc085b8e3
-
-        for (int i = 0; i < c.n; ++i)
-            x.table[i][0] = c.table[i][0] != 0 ? dist(rd) : 0;
 
         const int number_of_equalities = number_of_equations - slack_vars;
 
         for (int i = 0; i < number_of_equations; ++i) {
             double tempSum = 0;
-<<<<<<< HEAD
             for (int j = 0; j < number_of_vars - number_of_equalities; j++) {
                 tempSum += A.table[i][j] * x.table[j][0];
             }
             x.table[i + number_of_vars - number_of_equalities][0] = (b.table[i][0] - tempSum) / A.table[i][i + number_of_vars - number_of_equalities];
         }
         counter++;
-
-=======
-
-            for (int j = 0; j < number_of_vars; ++j)
-                tempSum += A.table[i][j] * x.table[j][0];
-
-            x.table[i + number_of_vars - number_of_equalities][0] =
-                    (b.table[i][0] - tempSum) * A.table[i][i + number_of_vars - number_of_equalities];
-        }
->>>>>>> c14a27549760e1c2c7b79d0ee226bb6fc085b8e3
     }
 
     return std::make_optional(std::move(x));
@@ -304,16 +278,7 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
 
     auto init = init_res.value();
     Matrix D = I;
-<<<<<<< HEAD
-    /*D.table[0][0] = 9.15;
-    D.table[1][1] = 0.2;
-    D.table[2][2] = 2.6;
-    D.table[3][3] = 10.7;
-    D.table[4][4] = 2.05;
-    D.table[5][5] = 4.15;*/
-=======
 
->>>>>>> c14a27549760e1c2c7b79d0ee226bb6fc085b8e3
     for (int i = 0; i < init.n; i++)
         D.table[i][i] = init.table[i][0];
 
