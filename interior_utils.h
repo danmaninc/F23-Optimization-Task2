@@ -1,8 +1,6 @@
 #ifndef F23_OPTIMIZATION_TASK2_INTERIOR_UTILS_H
 #define F23_OPTIMIZATION_TASK2_INTERIOR_UTILS_H
 
-//TODO: write all functions
-
 #include <iostream>
 #include <optional>
 #include <random>
@@ -235,8 +233,7 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
         std::cout << "P3:\n" << P << std::endl;
         Matrix c_p = P * c_tilda;
 
-        // TODO: pass alpha
-        x_tilda = calculateX_tilda(0.5, c_p);
+        x_tilda = calculateX_tilda(alpha, c_p);
 
         Matrix x_new = D * x_tilda;
         std::cout << "x_new\n" << x_new << std::endl;
