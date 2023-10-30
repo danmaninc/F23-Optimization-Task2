@@ -53,7 +53,6 @@ void impossible_case(std::string&& msg) {
     // Enter stage of coefficients for z-function
     std::cout << "Enter coefficients c(i-th) in z function (0 if absent)\n";
     ColumnVector c(number_of_vars + number_of_equations);
-
     for (int i = 0; i < number_of_vars; ++i) {
         std::cout << "c" << i + 1 << "=";
         std::cin >> c.table[i][0];
@@ -68,11 +67,11 @@ void impossible_case(std::string&& msg) {
     // Matrix A: each row determines coefficients for each equation
     Matrix a(number_of_equations, number_of_vars+number_of_equations);
 
+    // Matrix B: RHS
     ColumnVector b(number_of_equations);
 
     // Input stage of coefficients for constraints
     std::cout << "Enter coefficients (0 if absent) for all constraints (left hand side)\n";
-
     for (int i = 0; i < number_of_equations; ++i) {
         std::cout << i + 1 << " constraint\n";
 
@@ -92,27 +91,22 @@ void impossible_case(std::string&& msg) {
         } else if (sign == "<=") {
             a.table[i][number_of_vars + slack_vars] = 1;
             slack_vars++;
+        } else if (sign != "=") {
+            impossible_case("Invalid sign");
+            return std::nullopt;
         }
 
+        // Input stage of RHS
         std::cout << "Enter right hand side of inequality\n";
-
         double RHS;
         std::cin >> RHS;
 
-        /*if (RHS <= 0) {
-            std::string msg = std::to_string(RHS) + " is less than zero or equal to zero";
-            impossible_case(msg);
-            return std::nullopt;
-        }*/
-
         b.table[i][0] = RHS;
     }
-
     c.resize(number_of_vars+slack_vars);
     a.resize(number_of_equations, number_of_vars+slack_vars);
 
     std::cout << "Enter approximation accuracy (the number of values after the floating point, e.g., 2)\n";
-
     int eps;
     std::cin >> eps;
 
@@ -120,9 +114,6 @@ void impossible_case(std::string&& msg) {
         impossible_case(std::string("Approximation accuracy is less than zero"));
         return std::nullopt;
     }
-
-    //set_basic_vars(c, number_of_vars);
-    //set_presentation(matrix, number_of_vars, number_of_equations);
     std::cout << std::endl;
 
     return std::make_optional(
@@ -137,7 +128,7 @@ void impossible_case(std::string&& msg) {
 
 bool is_feasible(const ColumnVector& x) {
     for (int i = 0; i < x.n; i++)
-        if (x.table[i][0] < 0) // <=
+        if (x.table[i][0] < 0)
             return false;
 
     for (int i = 0; i < number_of_vars; i++)
@@ -217,28 +208,18 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
         Matrix A_tilda_t = A_tilda.find_transpose_matrix();
 
         Matrix arg = A_tilda * A_tilda_t;
-        std::cout << "arg before\n" << arg << std::endl;
         Matrix gauss = find_inverse_by_gauss(*(SquareMatrix *) &arg);
 
-        std::cout << "A_tilda_t:\n" << A_tilda_t << std::endl;
-        std::cout << "A_tilda\n" << A_tilda << std::endl;
-        std::cout << "arg after\n" << arg << std::endl;
-        std::cout << "gauss\n" << gauss << std::endl;
-
         Matrix P1 = A_tilda_t * gauss;
-        std::cout << "P1:\n" << P1 << std::endl;
         Matrix P2 = P1 * A_tilda;
-        std::cout << "P2:\n" << P2 << std::endl;
         Matrix P3 = I - P2;
 
         Matrix P = P3;
-        std::cout << "P3:\n" << P << std::endl;
         Matrix c_p = P * c_tilda;
 
         x_tilda = calculateX_tilda(alpha, c_p);
 
         Matrix x_new = D * x_tilda;
-        std::cout << "x_new\n" << x_new << std::endl;
         if (x == x_new) break;
 
         x = x_new;
@@ -265,7 +246,7 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
     std::cout << "B:\n" << b << std::endl;
     std::cout << "Vars: " << number_of_vars << std::endl;
     std::cout << "Slack: " << slack_vars << std::endl;
-    std::cout << number_of_equations << std::endl;
+    std::cout << "Number of equations: " << number_of_equations << std::endl;
 
     IdentityMatrix I(number_of_vars + slack_vars);
 
@@ -282,7 +263,7 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
     for (int i = 0; i < init.n; i++)
         D.table[i][i] = init.table[i][0];
 
-    std::cout << D << std::endl;
+    std::cout << "D:\n" << D << std::endl;
 
     std::cout << "Alpha is 0.5\n";
     Matrix x1 = interior_main(0.5, A, D, c);

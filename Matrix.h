@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <cmath>
 
-const double MIN_COUT = 0.000005;
+const double MIN_COUT = 0.05;
 
 const double ZERO = 0;
 
@@ -46,9 +46,9 @@ struct Matrix {
         for (auto& i : matrix.table) {
             for (int j = 0; j < i.size(); ++j) {
                 if (fabs(i[j]) < MIN_COUT) {
-                    out << /*std::setprecision(NUMBERS_AFTER_DOT) << std::fixed <<*/ ZERO;
+                    out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << ZERO;
                 } else {
-                    out << /*std::setprecision(NUMBERS_AFTER_DOT) << std::fixed <<*/ i[j];
+                    out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << i[j];
                 }
                 if (j != i.size() - 1) {
                     out << " ";
