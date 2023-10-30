@@ -6,10 +6,10 @@
 
 #include "Matrix.h"
 
-class AugmentedMatrix : public Matrix {
-public:
-    explicit AugmentedMatrix(SquareMatrix& A) : Matrix(A.n, 2 * A.m) {
+struct AugmentedMatrix : public Matrix {
+    explicit AugmentedMatrix(const SquareMatrix& A) : Matrix(A.n, 2 * A.m) {
         IdentityMatrix identity(A.n);
+
         for (int i = 0; i < this->n; ++i) {
             for (int j = 0; j < A.m; ++j) {
                 this->table[i][j] = A.table[i][j];
@@ -21,60 +21,73 @@ public:
             }
         }
     }
-    AugmentedMatrix(SquareMatrix& A, ColumnVector& b) : Matrix(A.n, A.m + 1) {
+
+    AugmentedMatrix(const SquareMatrix& A, const ColumnVector& b) : Matrix(A.n, A.m + 1) {
         for (int i = 0; i < this->n; ++i) {
-            for (int j = 0; j < A.m; ++j) {
+            for (int j = 0; j < A.m; ++j)
                 this->table[i][j] = A.table[i][j];
-            }
             this->table[i][A.m] = b.table[i][0];
         }
     }
-    SquareMatrix getResult() {
+
+    ~AugmentedMatrix() = default;
+
+    SquareMatrix get_result() {
         SquareMatrix res(this->n);
+
         for (int i = 0; i < n; ++i) {
             int index = n;
+
             for (int j = 0; j < n; ++j) {
                 res.table[i][j] = this->table[i][index];
                 index++;
             }
         }
+
         return res;
     }
-    ColumnVector getVector() {
+
+    ColumnVector get_vector() {
         ColumnVector res(this->n);
-        for (int i = 0; i < n; ++i) {
+
+        for (int i = 0; i < n; ++i)
             res.table[i][0] = this->table[i][n];
-        }
+
         return res;
     }
-    friend std::ostream& operator<<(std::ostream &out, AugmentedMatrix &matrix) {
+
+    friend std::ostream& operator<<(std::ostream& out, const AugmentedMatrix& matrix) {
         for (auto& i : matrix.table) {
             for (int j = 0; j < i.size() - 1; ++j) {
-                if (abs(i[j]) < MIN_COUT) {
+                if (std::fabs(i[j]) < MIN_COUT) {
                     out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << ZERO;
                 } else {
                     out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << i[j];
                 }
-                if (j != i.size() - 1) {
+
+                if (j != i.size() - 1)
                     out << " ";
-                }
             }
+
             out << std::endl;
         }
+
         for (int i = 0; i < matrix.n; ++i) {
-            if (abs(matrix.table[i][matrix.n]) < MIN_COUT) {
+            if (std::fabs(matrix.table[i][matrix.n]) < MIN_COUT) {
                 out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << ZERO << std::endl;
             } else {
                 out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << matrix.table[i][matrix.n] << std::endl;
             }
         }
+
         return out;
     }
 };
 
 class EliminationMatrix : public IdentityMatrix {
 public:
-    explicit EliminationMatrix(int n) : IdentityMatrix(n) {}
+    explicit EliminationMatrix(const int n) : IdentityMatrix(n) {}
+    ~EliminationMatrix() = default;
 
     void eliminate(Matrix& A, int row, int column, int pivot) {
         double coefficient = (-1) * A.table[row][column] / A.table[pivot][column];
@@ -84,7 +97,8 @@ public:
 
 class PermutationMatrix : public IdentityMatrix {
 public:
-    explicit PermutationMatrix(int n) : IdentityMatrix(n) {}
+    explicit PermutationMatrix(const int n) : IdentityMatrix(n) {}
+    ~PermutationMatrix() = default;
 
     void permutate(int first, int second) {
         for (int i = 0; i < n; ++i) {
@@ -96,7 +110,7 @@ public:
 };
 
 
-void reduceMatrixToDiag(Matrix& A) {
+void reduce_matrix_to_diag(Matrix& A) {
     int last = A.n - 1;
     int pivot = last;
     for (int i = last; i >= 0; --i) {
@@ -116,7 +130,7 @@ void reduceMatrixToDiag(Matrix& A) {
     }
 }
 
-void reduceMatrixToUpp(Matrix& A) {
+void reduce_matrix_to_upp(Matrix& A) {
     int pivot = 0;
     for (int i = 0; i < A.n; ++i) {
         double maxValue = abs(A.table[pivot][i]);
@@ -152,24 +166,25 @@ void reduceMatrixToUpp(Matrix& A) {
 void normalize(Matrix& A) {
     for (int i = 0; i < A.n; ++i) {
         double value = A.table[i][i];
-        for (int j = i; j < A.m; ++j) {
+
+        for (int j = i; j < A.m; ++j)
             A.table[i][j] /= value;
-        }
     }
 }
 
 
-SquareMatrix findInverseByGauss(SquareMatrix A) {
+SquareMatrix find_inverse_by_gauss(const SquareMatrix& A) {
     if (A.n == 1) {
         SquareMatrix res(1);
         res.table[0][0] = 1 / A.table[0][0];
         return res;
     }
+
     AugmentedMatrix aug(A);
-    reduceMatrixToUpp(*(Matrix *) &aug);
-    reduceMatrixToDiag(*(Matrix *) &aug);
+    reduce_matrix_to_upp(*(Matrix *) &aug);
+    reduce_matrix_to_diag(*(Matrix *) &aug);
     normalize(*(Matrix *) &aug);
-    return aug.getResult();
+    return aug.get_result();
 }
 
 #endif //F23_OPTIMIZATION_TASK2_INVERSE_UTILS_H

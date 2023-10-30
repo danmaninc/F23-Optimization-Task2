@@ -1,8 +1,6 @@
 #ifndef F23_OPTIMIZATION_TASK2_INTERIOR_H
 #define F23_OPTIMIZATION_TASK2_INTERIOR_H
 
-//TODO: write a class for storing an answer for a task
-
 #include <iostream>
 
 #include "Matrix.h"
@@ -18,7 +16,9 @@ struct Interior {
         variables.resize(size, 0);
     }
 
-    friend std::ostream& operator<<(std::ostream& out, Interior& answer) {
+    ~Interior() = default;
+
+    friend std::ostream& operator<<(std::ostream& out, const Interior& answer) {
         out << "Value of z: " << answer.z << std::endl;
 
         for (int i = 0; i < answer.variables.size(); ++i)
