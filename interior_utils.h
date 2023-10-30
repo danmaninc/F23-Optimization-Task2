@@ -159,7 +159,7 @@ std::optional<ColumnVector> set_initial_solution(
     }
     int counter = 0;
     while (!is_feasible(x)) {
-        if (counter == 200)
+        if (counter == 1000000)
         {
             return std::nullopt;
         }
@@ -167,19 +167,20 @@ std::optional<ColumnVector> set_initial_solution(
         std::uniform_real_distribution<double> dist(0, maxB);
         for (int i = 0; i < c.n; i++)
         {
-            if (c.table[i][0] != 0) x.table[i][0] = dist(rd);
+            if (c.table[i][0] != 0) x.table[i][0] = round(dist(rd) * 100)/100;
             else x.table[i][0] = 0;
         }
 
         int number_of_equalities = number_of_equations - slack_vars;
         for (int i = 0; i < number_of_equations; ++i) {
             double tempSum = 0;
-            for (int j = 0; j < number_of_vars; j++) {
+            for (int j = 0; j < number_of_vars - number_of_equalities; j++) {
                 tempSum += A.table[i][j] * x.table[j][0];
             }
-            x.table[i + number_of_vars - number_of_equalities][0] = (b.table[i][0] - tempSum) * A.table[i][i + number_of_vars - number_of_equalities];
+            x.table[i + number_of_vars - number_of_equalities][0] = (b.table[i][0] - tempSum) / A.table[i][i + number_of_vars - number_of_equalities];
         }
         counter++;
+
     }
     return x;
 }
@@ -281,6 +282,12 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
     }
     auto init = init_res.value();
     Matrix D = I;
+    /*D.table[0][0] = 9.15;
+    D.table[1][1] = 0.2;
+    D.table[2][2] = 2.6;
+    D.table[3][3] = 10.7;
+    D.table[4][4] = 2.05;
+    D.table[5][5] = 4.15;*/
     for (int i = 0; i < init.n; i++)
     {
         D.table[i][i] = init.table[i][0];
