@@ -73,11 +73,10 @@ struct AugmentedMatrix : public Matrix {
         }
 
         for (int i = 0; i < matrix.n; ++i) {
-            if (std::fabs(matrix.table[i][matrix.n]) < MIN_COUT) {
+            if (std::fabs(matrix.table[i][matrix.n]) < MIN_COUT)
                 out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << ZERO << std::endl;
-            } else {
+            else
                 out << std::setprecision(NUMBERS_AFTER_DOT) << std::fixed << matrix.table[i][matrix.n] << std::endl;
-            }
         }
 
         return out;
@@ -100,7 +99,7 @@ public:
     explicit PermutationMatrix(const int n) : IdentityMatrix(n) {}
     ~PermutationMatrix() = default;
 
-    void permutate(int first, int second) {
+    void permutate(const int first, const int second) {
         for (int i = 0; i < n; ++i) {
             double temp = this->table[first][i];
             this->table[first][i] = this->table[second][i];
@@ -113,52 +112,61 @@ public:
 void reduce_matrix_to_diag(Matrix& A) {
     int last = A.n - 1;
     int pivot = last;
+
     for (int i = last; i >= 0; --i) {
         if (A.table[pivot][i] == 0) {
-            pivot--;
+            --pivot;
             continue;
         }
+
         for (int j = pivot - 1; j >= 0; --j) {
-            if (A.table[j][i] == 0) {
+            if (A.table[j][i] == 0)
                 continue;
-            }
+
             EliminationMatrix E(A.n);
             E.eliminate(A, j, i, pivot);
             A = E * A;
         }
-        pivot--;
+
+        --pivot;
     }
 }
 
 void reduce_matrix_to_upp(Matrix& A) {
     int pivot = 0;
+
     for (int i = 0; i < A.n; ++i) {
-        double maxValue = abs(A.table[pivot][i]);
-        int maxIndex = pivot;
+        double max_value = std::fabs(A.table[pivot][i]);
+        int max_index = pivot;
+
         for (int j = pivot + 1; j < A.n; ++j) {
-            if (abs(A.table[j][i]) > maxValue) {
-                maxValue = abs(A.table[j][i]);
-                maxIndex = j;
+            if (std::fabs(A.table[j][i]) > max_value) {
+                max_value = std::fabs(A.table[j][i]);
+                max_index = j;
             }
         }
-        if (maxValue == 0) {
-            pivot++;
+
+        if (max_value == 0) {
+            ++pivot;
             continue;
         }
-        if (maxIndex != pivot) {
+
+        if (max_index != pivot) {
             PermutationMatrix P(A.n);
-            P.permutate(maxIndex, pivot);
+            P.permutate(max_index, pivot);
             A = P * A;
         }
+
         for (int j = pivot + 1; j < A.n; ++j) {
-            if (A.table[j][i] == 0) {
+            if (A.table[j][i] == 0)
                 continue;
-            }
+
             EliminationMatrix E(A.n);
             E.eliminate(A, j, i, pivot);
             A = E * A;
         }
-        pivot++;
+
+        ++pivot;
     }
 }
 
