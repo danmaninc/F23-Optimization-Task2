@@ -154,24 +154,26 @@ std::optional<ColumnVector> set_initial_solution(
     ColumnVector x(number_of_vars + slack_vars);
 
     double maxB = 0;
-    for (int i = 0; i < b.n; ++i) {
+
+    for (int i = 0; i < b.n; ++i)
         if (maxB < b.table[i][0]) maxB = b.table[i][0];
-    }
+
     int counter = 0;
+
     while (!is_feasible(x)) {
         if (counter == 1000000)
-        {
             return std::nullopt;
-        }
+
         std::random_device rd;
         std::uniform_real_distribution<double> dist(0, maxB);
-        for (int i = 0; i < c.n; i++)
-        {
+
+        for (int i = 0; i < c.n; i++) {
             if (c.table[i][0] != 0) x.table[i][0] = dist(rd);
             else x.table[i][0] = 0;
         }
 
-        int number_of_equalities = number_of_equations - slack_vars;
+        const int number_of_equalities = number_of_equations - slack_vars;
+
         for (int i = 0; i < number_of_equations; ++i) {
             double tempSum = 0;
             for (int j = 0; j < number_of_vars; j++) {
@@ -179,31 +181,28 @@ std::optional<ColumnVector> set_initial_solution(
             }
             x.table[i + number_of_vars - number_of_equalities][0] = (b.table[i][0] - tempSum) * A.table[i][i + number_of_vars - number_of_equalities];
         }
+
         counter++;
     }
-    return x;
+
+    return std::make_optional(std::move(x));
 }
 
-auto calculateX_tilda(double alpha, Matrix& c_p)
-{
+Matrix calculateX_tilda(double alpha, Matrix& c_p) {
     Matrix ones(number_of_vars + slack_vars, 1);
+
     for (int i = 0; i < ones.n; i++)
-    {
         ones.table[i][0] = 1;
-    }
 
     double v = 0;
-    for (int i = 0; i < c_p.n; i++)
-    {
-        if (c_p.table[i][0] >= 0) continue;
 
+    for (int i = 0; i < c_p.n; i++) {
+        if (c_p.table[i][0] >= 0) continue;
         v = std::max(fabs(c_p.table[i][0]), v);
     }
 
-
-    Matrix x_tilda = (alpha/v) * c_p;
+    Matrix x_tilda = (alpha / v) * c_p;
     x_tilda = ones + x_tilda;
-
     return x_tilda;
 }
 
@@ -237,7 +236,7 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
         std::cout << "P3:\n" << P << std::endl;
         Matrix c_p = P * c_tilda;
 
-        // alpha = 0.5
+        // TODO: pass alpha
         x_tilda = calculateX_tilda(0.5, c_p);
 
         Matrix x_new = D * x_tilda;
@@ -246,27 +245,26 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
 
         x = x_new;
         D = I;
+
         for (int i = 0; i < x.n; i++)
-        {
             D.table[i][i] = x.table[i][0];
-        }
     }
 
     std::cout << "max/min solution:\n" << x << std::endl;
-
     return x;
 }
 
 [[nodiscard]] std::optional<Interior> perform_interior_method() {
     auto matrix_opt = read_IP();
-    if (!matrix_opt.has_value()) {
+
+    if (!matrix_opt.has_value())
         return std::nullopt;
-    }
+
     auto [c, A, b, is_min_problem, eps] = matrix_opt.value();
 
-    std::cout << c << std::endl;
-    std::cout << A << std::endl;
-    std::cout << b << std::endl;
+    std::cout << "C:\n" << c << std::endl;
+    std::cout << "A:\n" << A << std::endl;
+    std::cout << "B:\n" << b << std::endl;
     std::cout << "Vars: " << number_of_vars << std::endl;
     std::cout << "Slack: " << slack_vars << std::endl;
     std::cout << number_of_equations << std::endl;
@@ -274,17 +272,17 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
     IdentityMatrix I(number_of_vars + slack_vars);
 
     auto init_res = set_initial_solution(c, A, b);
-    if (!init_res.has_value())
-    {
+
+    if (!init_res.has_value()) {
         impossible_case(std::string("No solution"));
         return std::nullopt;
     }
+
     auto init = init_res.value();
     Matrix D = I;
+
     for (int i = 0; i < init.n; i++)
-    {
         D.table[i][i] = init.table[i][0];
-    }
 
     std::cout << D << std::endl;
 
@@ -298,6 +296,7 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
 
     double result = 0;
     bool is_zero = true;
+
     for (int i = 0; i < x1.n; ++i) {
         result += x1.table[i][0] * c.table[i][0];
         ans.variables[i] = x1.table[i][0];
@@ -305,10 +304,10 @@ Matrix interior_main(double alpha, Matrix A, Matrix D, ColumnVector c) {
     }
 
     ans.z = result;
-    if (is_min_problem) ans.z *= -1;
 
+    if (is_min_problem) ans.z *= -1;
     if (is_zero) return std::nullopt;
-    return ans;
+    return std::make_optional(std::move(ans));
 }
 
 #endif //F23_OPTIMIZATION_TASK2_INTERIOR_UTILS_H

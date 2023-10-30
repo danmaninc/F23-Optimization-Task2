@@ -20,7 +20,7 @@ struct Interior {
 
     ~Interior() = default;
 
-    friend std::ostream& operator<<(std::ostream& out, Interior& answer) {
+    friend std::ostream& operator<<(std::ostream& out, const Interior& answer) {
         out << "Value of z: " << answer.z << std::endl;
 
         for (int i = 0; i < answer.variables.size(); ++i)
