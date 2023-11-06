@@ -260,7 +260,7 @@ Matrix interior_main(double alpha, const Matrix& A, Matrix& D, const ColumnVecto
     // Get initial trial solution
     auto init_res = set_initial_solution(c, A, b);
     if (!init_res.has_value()) {
-        impossible_case(std::string("No solution"));
+        if (verbose) impossible_case(std::string("No solution"));
         return std::nullopt;
     }
 

@@ -123,29 +123,17 @@ TEST(InteriorTests, Test_4) {
     );
 }
 
-/*TEST(InteriorTests, Test_5) {
-    perform_solution_test(
-            "../test_samples/5.json",
-            34.96,
-            std::vector<double>{0.38, 0, 0, 1.63, 2.33}
-    );
+TEST(InteriorTests, Test_5) {
+    perform_no_solution_test("../test_samples/5.json");
 }
 
 TEST(InteriorTests, Test_6) {
-    perform_solution_test(
-            "../test_samples/6.json",
-            -6.19,
-            std::vector<double>{0, 0, 1.24, 0, 0}
-    );
+    perform_no_solution_test("../test_samples/6.json");
 }
 
 TEST(InteriorTests, Test_7) {
-    perform_no_solution_test("../test_samples/7.json");
-}*/
-
-TEST(InteriorTests, Test_8) {
     perform_solution_test(
-            "../test_samples/8.json",
+            "../test_samples/7.json",
             845.25,
             std::vector<double>{45, 52.5}
     );
